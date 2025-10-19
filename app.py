@@ -33,18 +33,20 @@ def inject_css(theme: str, scale: int):
         st.markdown("<style>body,.stApp{background:#0B1220;color:#E5E7EB}</style>", unsafe_allow_html=True)
     else:
         st.markdown("<style>body,.stApp{background:#F8FAFC;color:#0F172A}</style>", unsafe_allow_html=True)
-        st.markdown("""
-    <style>
-      .chip {
-        display:inline-block;
-        border:1px solid #e5e7eb;
-        border-radius:9999px;
-        padding:2px 8px;
-        margin-left:6px;
-        font-size:.8em;
-      }
-    </style>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+          .chip {
+            display:inline-block;
+            border:1px solid #e5e7eb;
+            border-radius:9999px;
+            padding:2px 8px;
+            margin-left:6px;
+            font-size:.8em;
+          }
+        </style>
+        """, unsafe_allow_html=True
+    )
 
 inject_css(st.session_state["ui_theme"], st.session_state["font_scale"])
 
@@ -217,7 +219,8 @@ def render_detail_view():
         return
     t1,t2,t3 = st.columns([1,1,1])
     if t1.button("← 返回列表"): st.session_state["view"]="list"; st.rerun()
-    pdf=build_device_pdf(d); t2.download_button("下載此筆 PDF", data=pdf, file_name=f\"{d['id']}.pdf\", mime=\"application/pdf\")
+    pdf = build_device_pdf(d)
+    t2.download_button("下載此筆 PDF", data=pdf, file_name=f"{d['id']}.pdf", mime="application/pdf")
     if t3.button("顯示 QR Code"): show_qr_dialog(d)
 
     st.header(d["name"])
@@ -226,7 +229,9 @@ def render_detail_view():
 
     c1,c2,c3=st.columns(3)
     cap=d.get("funding",{}).get("amountCap"); ratio=d.get("funding",{}).get("ratioCap"); life=d.get("lifespanYears")
-    c1.metric("金額上限", format_currency(cap)); c2.metric("補助比例", percent(ratio)); c3.metric("使用年限", f\"{life} 年\" if life else "—")
+    c1.metric("金額上限", format_currency(cap))
+    c2.metric("補助比例", percent(ratio))
+    c3.metric("使用年限", f"{life} 年" if life else "—")
 
     st.markdown("### 補助資格（通用） " + cite_tag(), unsafe_allow_html=True)
     for e in d.get("eligibility",[]) or []: st.write(f"- {e}")
@@ -260,8 +265,8 @@ def render_detail_view():
     if srcs:
         for i,s in enumerate(srcs,1):
             label=s.get("label",f"來源 {i}"); url=s.get("url",""); note=s.get("note","")
-            if url: st.markdown(f\"{i}. [{label}]({url}) — {note}\")
-            else: st.markdown(f\"{i}. {label} — {note}\")
+            if url: st.markdown(f"{i}. [{label}]({url}) — {note}")
+            else: st.markdown(f"{i}. {label} — {note}")
     else:
         st.caption("（此筆尚未設定來源，請後台補充）")
 
