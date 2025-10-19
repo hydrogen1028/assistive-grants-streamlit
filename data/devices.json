@@ -13,21 +13,31 @@
       "PWD"
     ],
     "eligibility": [
-      "具活動受限且需輪椅代步之評估結果（職能/物理治療師評估）",
+      "具活動受限且需輪椅代步之評估結果",
       "居家/社區生活且符合長照或身心障礙資格"
     ],
     "funding": {
       "amountCap": 10000,
-      "ratioCap": 0.7,
-      "notes": [
-        "低收/中低收可提高比例（依各縣市公告）"
-      ]
+      "ratioCap": 0.7
     },
     "lifespanYears": 5,
     "renewalIntervalYears": 5,
-    "usageNotes": [
-      "可申請維修補助；電動輪椅另案規範",
-      "依公告可選購輕量化/快拆輪等配件，超出上限部分自付"
+    "citySpecifics": [
+      {
+        "city": "臺北市",
+        "program": "PWD",
+        "funding": {
+          "amountCap": 12000,
+          "ratioCap": 0.75
+        },
+        "sourceUrl": "https://www.gov.taipei/"
+      }
+    ],
+    "sources": [
+      {
+        "label": "長照生活輔具補助辦法（中央）",
+        "url": "https://www.mohw.gov.tw/"
+      }
     ],
     "lastUpdated": "2025-10-01"
   },
@@ -45,72 +55,18 @@
       "PWD"
     ],
     "eligibility": [
-      "下肢肌力或平衡不足，經專業評估需要",
-      "可獨立/監督使用，且有居家/社區行走需求"
+      "下肢肌力或平衡不足，經專業評估需要"
     ],
     "funding": {
       "amountCap": 3000,
       "ratioCap": 0.7
     },
     "lifespanYears": 3,
-    "renewalIntervalYears": 3,
-    "usageNotes": [
-      "折疊式可攜帶；輪式需注意煞車與安全"
-    ],
-    "lastUpdated": "2025-10-01"
-  },
-  {
-    "id": "transfer-belt",
-    "name": "移位帶",
-    "aliases": [
-      "移位腰帶",
-      "輔助移位帶"
-    ],
-    "category": "移位",
-    "photos": [],
-    "programs": [
-      "LTC"
-    ],
-    "eligibility": [
-      "主要照顧者於居家移位時需要輔助，具安全風險"
-    ],
-    "funding": {
-      "amountCap": 1500,
-      "ratioCap": 0.7
-    },
-    "lifespanYears": 2,
-    "renewalIntervalYears": 2,
-    "usageNotes": [
-      "建議搭配移位技巧訓練；破損應立即汰換"
-    ],
-    "lastUpdated": "2025-10-01"
-  },
-  {
-    "id": "hearing-aid",
-    "name": "助聽器（單耳）",
-    "aliases": [
-      "聽力輔具"
-    ],
-    "category": "聽覺",
-    "photos": [],
-    "programs": [
-      "PWD"
-    ],
-    "eligibility": [
-      "經耳鼻喉科醫師及聽覺專業評估符合補助條件",
-      "有日常溝通需求且願意配戴與追蹤調整"
-    ],
-    "funding": {
-      "amountCap": 10000,
-      "ratioCap": 0.7,
-      "notes": [
-        "雙耳視評估條件"
-      ]
-    },
-    "lifespanYears": 5,
-    "renewalIntervalYears": 5,
-    "usageNotes": [
-      "需定期回診調整；電池/維修另規範"
+    "sources": [
+      {
+        "label": "身心障礙者輔具費用補助辦法",
+        "url": "https://dep.mohw.gov.tw/"
+      }
     ],
     "lastUpdated": "2025-10-01"
   }
