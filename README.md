@@ -1,18 +1,25 @@
+# 輔具補助查詢（Streamlit 版，自動載入圖片）
 
-# 輔具補助查詢（Streamlit 版）
+此版本會自動從 `data/images/` 讀取圖片並依「品項」配對。支援兩種命名規則：
 
-可直接部署到 **Streamlit Community Cloud**。
+## 規則 A：子資料夾（推薦）
+- `data/images/<device_id>/01.jpg`
+- 例如：
+  - `data/images/wheelchair/01.jpg`
+  - `data/images/walker/01.jpg`
+
+## 規則 B：檔名前綴
+- `data/images/<device_id>-任意名稱.jpg`
+- 例如：
+  - `data/images/wheelchair-側面.jpg`
+  - `data/images/walker-v2.png`
+
+> `<device_id>` 對應 `data/devices.json` 中的 `id` 欄位。
+
+放好圖之後，重新部署即可自動顯示。
 
 ## 本機執行
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
-
-## 部署到 Streamlit Community Cloud
-1. 將此資料夾推上 GitHub（例如 repo 名稱：`assistive-grants-streamlit`）。
-2. 前往 https://streamlit.io → Sign In → **New app**。
-3. 選擇你的 repo、分支（main）、App file 選 `app.py`，Python 版本選 3.10 或 3.11。
-4. Deploy 後會取得公開網址。
-
-> 若要接真實 API，可在 `app.py` 以 `requests.get(...)` 取得資料，或將每日爬蟲輸出的 JSON 覆蓋 `data/devices.json`。

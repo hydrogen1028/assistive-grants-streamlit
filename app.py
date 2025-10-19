@@ -1,4 +1,3 @@
-
 import json
 from pathlib import Path
 import streamlit as st
@@ -6,10 +5,12 @@ import pandas as pd
 
 st.set_page_config(page_title="輔具補助查詢", page_icon="🧰", layout="wide")
 
+DATA_DIR = Path("data")
+IMAGES_DIR = DATA_DIR / "images"
+
 @st.cache_data
 def load_devices():
-    data = json.loads(Path("data/devices.json").read_text(encoding="utf-8"))
-    return data
+    return json.loads((DATA_DIR / "devices.json").read_text(encoding="utf-8"))
 
 def format_currency(n):
     if isinstance(n, (int, float)):
@@ -24,7 +25,62 @@ def percent(p):
 def normalize(s: str) -> str:
     return (s or "").lower()
 
+def resolve_photo(p: str) -> str:
+    p = p or ""
+    if p.lower().startswith(("http://", "https://", "data:")):
+        return p
+    return str(Path(p))
+
+@st.cache_data
+def build_photo_index():
+    # Scan data/images with two rules:
+    # A) data/images/<device_id>/*.(jpg|jpeg|png|webp|gif)
+    # B) data/images/<device_id>-*.(jpg|jpeg|png|webp|gif)
+    idx = {}
+    if not IMAGES_DIR.exists():
+        return idx
+
+    exts = ("*.jpg", "*.jpeg", "*.png", "*.webp", "*.gif")
+    # Rule A: subfolders
+    for sub in IMAGES_DIR.iterdir():
+        if sub.is_dir():
+            dev_id = sub.name
+            files = []
+            for ext in exts:
+                files += list(sub.glob(ext))
+            if files:
+                idx.setdefault(dev_id, [])
+                idx[dev_id] += [str(p.relative_to(Path("."))) for p in sorted(files)]
+
+    # Rule B: filename prefix
+    for ext in exts:
+        for p in IMAGES_DIR.glob(ext):
+            name = p.stem
+            if "-" in name:
+                dev_id = name.split("-")[0]
+                idx.setdefault(dev_id, [])
+                idx[dev_id].append(str(p.relative_to(Path("."))))
+
+    # dedupe & sort
+    for k, v in idx.items():
+        uniq = []
+        seen = set()
+        for x in v:
+            if x not in seen:
+                uniq.append(x); seen.add(x)
+        idx[k] = sorted(uniq)
+    return idx
+
 devices = load_devices()
+photo_index = build_photo_index()
+
+# Merge auto photos into each device
+for d in devices:
+    auto_photos = photo_index.get(d["id"], [])
+    d.setdefault("photos", [])
+    d["photos"] = auto_photos + d["photos"]
+
+# Search options
 name_to_id = {}
 options = []
 for d in devices:
@@ -36,7 +92,7 @@ for d in devices:
         name_to_id[label] = d["id"]
 
 st.title("輔具補助查詢（Streamlit 版 Demo）")
-st.caption("輸入或選擇輔具名稱 → 顯示照片、補助資格、上限/比例、使用年限與各縣市差異。")
+st.caption("輸入或選擇輔具名稱 → 顯示照片、補助資格、上限/比例、使用年限與各縣市差異。圖片會自動從 data/images/ 匹配載入。")
 
 col_search, col_filters = st.columns([3, 1])
 with col_search:
@@ -66,7 +122,9 @@ left, right = st.columns([1.2, 2.0])
 with left:
     for d in filtered:
         with st.container(border=True):
-            st.image(d["photos"][0], use_column_width=True)
+            photos = d.get("photos") or []
+            if photos:
+                st.image(resolve_photo(photos[0]), use_column_width=True)
             st.subheader(d["name"])
             st.caption(f"{d['category']}｜適用體系：{' / '.join(d.get('programs', []))}")
             cap = d.get("funding", {}).get("amountCap")
@@ -91,7 +149,24 @@ with right:
     else:
         d = selected
         st.header(d["name"])
-        st.image(d["photos"][0], use_column_width=True)
+
+        photos = d.get("photos") or []
+        if photos:
+            key = f"photo_idx_{d['id']}"
+            if key not in st.session_state:
+                st.session_state[key] = 0
+            big = photos[min(st.session_state[key], len(photos)-1)]
+            st.image(resolve_photo(big), use_column_width=True)
+
+            if len(photos) > 1:
+                st.caption("其他圖片")
+                cols = st.columns(min(len(photos), 5))
+                for i, p in enumerate(photos[:5]):
+                    with cols[i]:
+                        if st.button(" ", key=f"thumb-{d['id']}-{i}"):
+                            st.session_state[key] = i
+                        st.image(resolve_photo(p), use_column_width=True)
+
         cap = d.get("funding", {}).get("amountCap")
         ratio = d.get("funding", {}).get("ratioCap")
         c1, c2, c3 = st.columns(3)
