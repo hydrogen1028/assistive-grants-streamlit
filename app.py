@@ -33,9 +33,18 @@ def inject_css(theme: str, scale: int):
         st.markdown("<style>body,.stApp{background:#0B1220;color:#E5E7EB}</style>", unsafe_allow_html=True)
     else:
         st.markdown("<style>body,.stApp{background:#F8FAFC;color:#0F172A}</style>", unsafe_allow_html=True)
-    st.markdown(\"\"\"
-    <style>.chip{display:inline-block;border:1px solid #e5e7eb;border-radius:9999px;padding:2px 8px;margin-left:6px;font-size:.8em;}</style>
-    \"\"\", unsafe_allow_html=True)
+        st.markdown("""
+    <style>
+      .chip {
+        display:inline-block;
+        border:1px solid #e5e7eb;
+        border-radius:9999px;
+        padding:2px 8px;
+        margin-left:6px;
+        font-size:.8em;
+      }
+    </style>
+    """, unsafe_allow_html=True)
 
 inject_css(st.session_state["ui_theme"], st.session_state["font_scale"])
 
