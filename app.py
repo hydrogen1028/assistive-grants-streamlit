@@ -162,20 +162,31 @@ def render_list_view():
     st.caption(f"找到 {len(filtered)} 項")
     for d in filtered:
         with st.container(border=True):
-            c1,c2,c3 = st.columns([1,3,1])
+            c1, c2, c3 = st.columns([1, 3, 1])
+
             with c1:
-                img = pick_best_image(d.get("photos") or [], 800)
-                st.image(img, use_column_width=True) if img else st.caption("（無圖片）")
+                img = pick_best_image(d.get("photos") or [], target_width=800)
+                if img:
+                    st.image(img, use_column_width=True)
+                else:
+                    st.caption("（無圖片）")
+
             with c2:
                 st.subheader(d["name"])
                 aliases = d.get("aliases", [])
                 if aliases:
-                    chips = " ".join([f"<span style='border:1px solid #e5e7eb;border-radius:9999px;padding:2px 8px;font-size:.8em;margin-right:6px'>{a}</span>" for a in aliases])
+                    chips = " ".join([
+                        f"<span style='border:1px solid #e5e7eb;border-radius:9999px;padding:2px 8px;font-size:.8em;margin-right:6px'>{a}</span>"
+                        for a in aliases
+                    ])
                     st.markdown(chips, unsafe_allow_html=True)
                 st.caption(f"{d.get('category','—')}｜體系：{' / '.join(d.get('programs', []))}")
+
             with c3:
                 if st.button("查看詳情", key=f"view-{d['id']}"):
-                    st.session_state["selected_id"]=d["id"]; st.session_state["view"]="detail"; st.rerun()
+                    st.session_state["selected_id"] = d["id"]
+                    st.session_state["view"] = "detail"
+                    st.rerun()
 
 def render_detail_view():
     d = next((x for x in devices if x["id"]==st.session_state["selected_id"]), None)
