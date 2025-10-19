@@ -74,11 +74,29 @@ def build_photo_index():
 devices = load_devices()
 photo_index = build_photo_index()
 
-# Merge auto photos into each device
+# 合併自動圖片到每個品項
 for d in devices:
     auto_photos = photo_index.get(d["id"], [])
     d.setdefault("photos", [])
-    d["photos"] = auto_photos + d["photos"]
+    d["photos"] = auto_photos + d["photos"]  # 讓本地自動圖優先顯示
+
+# 上方工具列：清快取 + 偵錯
+with st.sidebar:
+    st.subheader("工具")
+    if st.button("清除快取並重新整理"):
+        st.cache_data.clear()
+        st.rerun()
+
+    with st.expander("偵錯（圖片配對）"):
+        st.write("以下顯示每個 id 配到的圖片清單：")
+        for d in devices:
+            st.write(f"**{d['id']}** / {d['name']}")
+            pics = d.get("photos", [])
+            if pics:
+                for p in pics:
+                    st.write("-", p)
+            else:
+                st.warning("沒有配到圖片（請檢查 data/images/ 與 id 是否一致）")
 
 # Search options
 name_to_id = {}
