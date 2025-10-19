@@ -1,3 +1,4 @@
+
 import io, json
 from pathlib import Path
 import streamlit as st
@@ -24,8 +25,7 @@ with st.sidebar:
     st.header("外觀設定")
     st.session_state["ui_theme"] = st.radio("Theme", ["light", "dark"], index=0, horizontal=True)
     st.session_state["font_scale"] = st.slider("字體大小（%）", 80, 140, st.session_state["font_scale"], 5)
-    if st.button("清除快取"):
-        st.cache_data.clear(); st.rerun()
+    if st.button("清除快取"): st.cache_data.clear(); st.rerun()
 
 def inject_css(theme: str, scale: int):
     st.markdown(f"<style>html {{ font-size: {scale}% }}</style>", unsafe_allow_html=True)
@@ -95,12 +95,25 @@ def format_currency(n):
 def percent(p):
     return f"{round(p*100)}%" if isinstance(p,(int,float)) else "—"
 def normalize(s: str) -> str: return (s or "").lower()
-
 def cite_tag(): return "<span style='border:1px solid #e5e7eb;border-radius:9999px;padding:2px 8px;font-size:.8em;margin-left:6px'>資料來源</span>"
 
-# ---- search ----
+# ---- search + all-devices dropdown ----
 st.title("輔具補助查詢")
 q = st.text_input("搜尋輔具名稱或別名", placeholder="輸入：輪椅、助行器、移位帶、助聽器…")
+
+# 全品項下拉（含別名）— 總是可用
+label_to_id = {}; labels = []
+for d in devices:
+    labels.append(d["name"]); label_to_id[d["name"]] = d["id"]
+    for a in d.get("aliases", []):
+        label = f"{a}（{d['name']}）"
+        labels.append(label); label_to_id[label] = d["id"]
+picked_label = st.selectbox("📋 直接選擇輔具（含別名）", options=["— 直接選擇 —"] + labels, index=0, key="select_all_devices")
+if picked_label and picked_label != "— 直接選擇 —":
+    st.session_state["selected_id"] = label_to_id[picked_label]
+    st.session_state["view"] = "detail"
+    st.rerun()
+
 program = st.radio("體系過濾", ["全部","LTC","PWD"], index=0, horizontal=True)
 
 def match_device(d):
@@ -162,37 +175,30 @@ def render_list_view():
     st.caption(f"找到 {len(filtered)} 項")
     for d in filtered:
         with st.container(border=True):
-            c1, c2, c3 = st.columns([1, 3, 1])
-
+            c1,c2,c3 = st.columns([1,3,1])
             with c1:
-                img = pick_best_image(d.get("photos") or [], target_width=800)
+                img = pick_best_image(d.get("photos") or [], 800)
                 if img:
                     st.image(img, use_column_width=True)
                 else:
                     st.caption("（無圖片）")
-
             with c2:
                 st.subheader(d["name"])
                 aliases = d.get("aliases", [])
                 if aliases:
-                    chips = " ".join([
-                        f"<span style='border:1px solid #e5e7eb;border-radius:9999px;padding:2px 8px;font-size:.8em;margin-right:6px'>{a}</span>"
-                        for a in aliases
-                    ])
+                    chips = " ".join([f"<span style='border:1px solid #e5e7eb;border-radius:9999px;padding:2px 8px;font-size:.8em;margin-right:6px'>{a}</span>" for a in aliases])
                     st.markdown(chips, unsafe_allow_html=True)
                 st.caption(f"{d.get('category','—')}｜體系：{' / '.join(d.get('programs', []))}")
-
             with c3:
                 if st.button("查看詳情", key=f"view-{d['id']}"):
-                    st.session_state["selected_id"] = d["id"]
-                    st.session_state["view"] = "detail"
-                    st.rerun()
+                    st.session_state["selected_id"]=d["id"]; st.session_state["view"]="detail"; st.rerun()
 
 def render_detail_view():
     d = next((x for x in devices if x["id"]==st.session_state["selected_id"]), None)
     if not d:
-        st.warning("找不到該項目"); 
-        if st.button("返回列表"): st.session_state["view"]="list"; st.rerun()
+        st.warning("找不到該項目")
+        if st.button("返回列表"):
+            st.session_state["view"]="list"; st.rerun()
         return
     t1,t2,t3 = st.columns([1,1,1])
     if t1.button("← 返回列表"): st.session_state["view"]="list"; st.rerun()
@@ -201,18 +207,14 @@ def render_detail_view():
 
     st.header(d["name"])
     big = pick_best_image(d.get("photos") or [], 1200)
-    if big: st.image(big, use_column_width=True)
+    if big:
+        st.image(big, use_column_width=True)
     cap=d.get("funding",{}).get("amountCap"); ratio=d.get("funding",{}).get("ratioCap"); life=d.get("lifespanYears")
     c1,c2,c3 = st.columns(3)
     c1.metric("金額上限", format_currency(cap)); c2.metric("補助比例", percent(ratio)); c3.metric("使用年限", f"{life} 年" if life else "—")
 
     st.markdown("### 補助資格（通用） "+cite_tag(), unsafe_allow_html=True)
     for e in d.get("eligibility", []): st.write(f"- {e}")
-
-    st.markdown("### 使用年限與汰換規則 "+cite_tag(), unsafe_allow_html=True)
-    if d.get('lifespanYears'): st.write(f"- 建議使用年限：**{d.get('lifespanYears')} 年**")
-    else: st.write("- 建議使用年限：**依公告**")
-    if d.get('renewalIntervalYears'): st.write(f"- 最短汰換間隔：**{d.get('renewalIntervalYears')} 年**")
 
     st.markdown("---"); st.subheader("參考資料來源")
     sources = list(d.get("sources",[]) or [])
@@ -222,7 +224,10 @@ def render_detail_view():
     if sources:
         for i,s in enumerate(sources,1):
             label=s.get("label",f"來源 {i}"); url=s.get("url",""); note=s.get("note","")
-            st.markdown(f"{i}. [{label}]({url}) — {note}" if url else f"{i}. {label} — {note}")
+            if url:
+                st.markdown(f"{i}. [{label}]({url}) — {note}")
+            else:
+                st.markdown(f"{i}. {label} — {note}")
     else:
         st.caption("（此筆尚未設定來源，請後台補充）")
 
